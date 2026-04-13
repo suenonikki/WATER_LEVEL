@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --background: #F5E4CF;
+            --foreground: #1a1a2e;
+            --card: #ffffff;
+            --card-foreground: #1a1a2e;
+            --primary: #275CCC;
+            --primary-foreground: #F5E4CF;
+            --secondary: #e8d4bd;
+            --secondary-foreground: #275CCC;
+            --muted-foreground: #6b7280;
+            --border: #d4c4ad;
+            --water-light: #a8d4f5;
+            --water-medium: #5ba8e6;
+            --water-dark: #275CCC;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 100px;
+        }
+
+        .content {
+            padding: 32px 24px;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            margin-bottom: 4px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--foreground);
+        }
+
+        /* Alert */
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 16px;
+            background-color: rgba(39, 92, 204, 0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .alert-icon svg {
+            width: 16px;
+            height: 16px;
+            color: var(--primary-foreground);
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            font-size: 14px;
+            color: var(--muted-foreground);
+        }
+
+        .alert-close {
+            background: none;
+            border: none;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+
+        .alert-close:hover {
+            color: var(--foreground);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Water Card */
+        .water-card {
+            border-radius: 24px;
+            background: linear-gradient(to bottom, #d4edfc, #a8d4f5);
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .water-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .water-card-left {
+            flex: 1;
+        }
+
+        .water-card-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .water-card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--foreground);
+        }
+
+        .water-card-right {
+            text-align: right;
+        }
+
+        .water-card-goal-label {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            margin-bottom: 4px;
+        }
+
+        .water-card-goal {
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        /* Glass */
+        .glass-container {
+            position: relative;
+            width: 128px;
+            height: 208px;
+            margin: 0 auto 24px;
+            border-radius: 16px;
+            border: 4px solid rgba(255, 255, 255, 0.7);
+            background-color: rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .glass-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, #5ba8e6, #275CCC);
+            transition: height 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .glass-wave {
+            position: absolute;
+            top: -2px;
+            left: 0;
+            width: 100%;
+            height: 15px;
+        }
+
+        .glass-percentage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+
+        /* Bubbles */
+        .bubble {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            left: 12px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .bubble.bubble1 {
+            width: 8px;
+            height: 8px;
+            bottom: 8px;
+            animation-duration: 2s;
+        }
+
+        .bubble.bubble2 {
+            width: 6px;
+            height: 6px;
+            bottom: 16px;
+            right: 16px;
+            animation-duration: 2.5s;
+            animation-delay: 0.5s;
+        }
+
+        .bubble.bubble3 {
+            width: 4px;
+            height: 4px;
+            bottom: 24px;
+            left: 20px;
+            animation-duration: 1.8s;
+            animation-delay: 0.3s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+                opacity: 0.4;
+            }
+            50% {
+                transform: translateY(-20px) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes wave {
+            0%, 100% {
+                transform: translateX(0) translateY(0);
+            }
+            50% {
+                transform: translateX(-5px) translateY(2px);
+            }
+        }
+
+        /* Drinking History Chart */
+        .chart-card {
+            border-radius: 24px;
+            background: linear-gradient(to bottom, #d4edfc, #a8d4f5);
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .chart-info {
+            flex: 1;
+        }
+
+        .chart-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .chart-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--foreground);
+            margin-bottom: 8px;
+        }
+
+        .chart-time {
+            font-size: 12px;
+            color: var(--muted-foreground);
+        }
+
+        .chart-consumed {
+            text-align: right;
+        }
+
+        .chart-consumed-label {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            margin-bottom: 4px;
+        }
+
+        .chart-consumed-value {
+            font-weight: 600;
+            color: var(--foreground);
+            font-size: 18px;
+        }
+
+        /* SVG Chart Container */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            margin-bottom: 16px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Control Buttons */
+        .button-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-minus {
+            width: 48px;
+            height: 48px;
+            background-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-minus svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+        }
+
+        .btn-add {
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary);
+        }
+
+        .btn-add svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary-foreground);
+        }
+
+        .btn-add100 {
+            width: 48px;
+            height: 48px;
+            background-color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Grid Stats */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            border-radius: 16px;
+            background-color: var(--card);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon.red {
+            background-color: #fee2e2;
+        }
+
+        .stat-icon.red svg {
+            width: 16px;
+            height: 16px;
+            color: #ef4444;
+        }
+
+        .stat-icon.orange {
+            background-color: #fed7aa;
+        }
+
+        .stat-icon.orange svg {
+            width: 16px;
+            height: 16px;
+            color: #f59e0b;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--muted-foreground);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--foreground);
+            margin-bottom: 4px;
+        }
+
+        .stat-unit {
+            font-size: 13px;
+            color: var(--muted-foreground);
+        }
+
+        /* Summary Card */
+        .summary-card {
+            border-radius: 16px;
+            background-color: var(--card);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-top: 24px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            text-align: center;
+        }
+
+        .summary-item-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .summary-item-label {
+            font-size: 11px;
+            color: var(--muted-foreground);
+        }
+
+        /* Devices Card */
+        .devices-card {
+            border-radius: 16px;
+            background-color: var(--card);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-top: 24px;
+        }
+
+        .device-item {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            padding: 16px;
+            border-radius: 12px;
+            background-color: rgba(232, 212, 189, 0.5);
+            margin-bottom: 12px;
+        }
+
+        .device-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .device-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(39, 92, 204, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .device-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+        }
+
+        .device-content {
+            flex: 1;
+        }
+
+        .device-name {
+            font-weight: 500;
+            color: var(--foreground);
+            margin-bottom: 2px;
+        }
+
+        .device-status {
+            font-size: 13px;
+            color: var(--muted-foreground);
+        }
+
+        .device-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .device-battery {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            color: var(--muted-foreground);
+            font-size: 13px;
+        }
+
+        .device-battery svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .device-connected {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            border-radius: 20px;
+            background-color: #dcfce7;
+            padding: 4px 12px;
+        }
+
+        .device-connected svg {
+            width: 12px;
+            height: 12px;
+            color: #16a34a;
+        }
+
+        .device-connected-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: #16a34a;
+        }
+
+        /* Bottom Navigation */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-top: 1px solid var(--border);
+            background-color: var(--card);
+            padding: 12px 24px;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: around;
+            max-width: 448px;
+            margin: 0 auto;
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            padding: 8px 24px;
+            border-radius: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--muted-foreground);
+        }
+
+        .nav-btn:hover {
+            color: var(--foreground);
+        }
+
+        .nav-btn.active {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .nav-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .nav-btn-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Tab Pages */
+        .tab-page {
+            display: none;
+        }
+
+        .tab-page.active {
+            display: block;
+        }
+
+        /* Activity & Profile Pages */
+        .activity-content,
+        .profile-content {
+            padding: 32px 24px 100px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--foreground);
+            margin-bottom: 24px;
+        }
+
+        .placeholder-text {
+            font-size: 16px;
+            color: var(--muted-foreground);
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .content {
+                padding: 24px 16px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                text-align: left;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <main>
+            <!-- Home Tab -->
+            <div id="home-tab" class="tab-page active">
+                <div class="content">
+                    <div class="header">
+                        <p class="header-subtitle">Good morning</p>
+                        <h1 class="header-title">Stay Hydrated</h1>
+                    </div>
+
+                    <!-- Alert -->
+                    <div id="alert" class="alert">
+                        <div class="alert-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.5 1.5H3.75A2.25 2.25 0 001.5 3.75v16.5A2.25 2.25 0 003.75 22.5h16.5a2.25 2.25 0 002.25-2.25V13.5M22.5 1.5v9m0 0h-9m9 0l-6-6"/>
+                            </svg>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Time to hydrate</div>
+                            <div class="alert-message" id="alert-message">Drink 660ml more to reach your daily goal</div>
+                        </div>
+                        <button class="alert-close" onclick="document.getElementById('alert').classList.add('hidden')">×</button>
+                    </div>
+
+                    <!-- Water Card -->
+                    <div class="water-card">
+                        <div class="water-card-header">
+                            <div class="water-card-left">
+                                <p class="water-card-label">Water Intake</p>
+                                <p class="water-card-value"><span id="intake-value">1340</span>ml</p>
+                            </div>
+                            <div class="water-card-right">
+                                <p class="water-card-goal-label">Goal</p>
+                                <p class="water-card-goal">2000ml</p>
+                            </div>
+                        </div>
+
+                        <!-- Glass -->
+                        <div class="glass-container">
+                            <div class="glass-fill" id="glass-fill" style="height: 67%;">
+                                <svg class="glass-wave" viewBox="0 0 100 15" preserveAspectRatio="none">
+                                    <path d="M0,8 Q25,0 50,8 T100,8 L100,15 L0,15 Z" fill="#5ba8e6" style="animation: wave 2s ease-in-out infinite;"/>
+                                </svg>
+                                <div class="bubble bubble1"></div>
+                                <div class="bubble bubble2"></div>
+                                <div class="bubble bubble3"></div>
+                            </div>
+                            <div class="glass-percentage" id="glass-percentage">67%</div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="button-group">
+                            <button class="btn btn-minus" onclick="addWater(-100)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-add" onclick="addWater(250)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-add100" onclick="addWater(100)">+100</button>
+                        </div>
+                    </div>
+
+                    <!-- Drinking History Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-info">
+                                <p class="chart-label">Drinking History</p>
+                                <p class="chart-title">Today's Intake</p>
+                                <p class="chart-time" id="chart-time-range">12:00 AM - Now</p>
+                            </div>
+                            <div class="chart-consumed">
+                                <p class="chart-consumed-label">Total Consumed</p>
+                                <p class="chart-consumed-value"><span id="chart-total-ml">1340</span>ml</p>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <svg class="chart-svg" id="drinking-chart" viewBox="0 0 600 150" preserveAspectRatio="none">
+                                <!-- Grid lines -->
+                                <line x1="0" y1="30" x2="600" y2="30" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                                <line x1="0" y1="60" x2="600" y2="60" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                                <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                                <line x1="0" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+
+                                <!-- Y-axis labels -->
+                                <text x="5" y="35" font-size="10" fill="var(--muted-foreground)" dy="0.3em">2000ml</text>
+                                <text x="5" y="65" font-size="10" fill="var(--muted-foreground)" dy="0.3em">1500ml</text>
+                                <text x="5" y="95" font-size="10" fill="var(--muted-foreground)" dy="0.3em">1000ml</text>
+                                <text x="5" y="125" font-size="10" fill="var(--muted-foreground)" dy="0.3em">500ml</text>
+
+                                <!-- Axis lines -->
+                                <line x1="40" y1="0" x2="40" y2="140" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+                                <line x1="40" y1="140" x2="600" y2="140" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+
+                                <!-- Chart line and area (will be updated by JS) -->
+                                <defs>
+                                    <linearGradient id="chart-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#5ba8e6;stop-opacity:0.4" />
+                                        <stop offset="100%" style="stop-color:#275CCC;stop-opacity:0.05" />
+                                    </linearGradient>
+                                </defs>
+                                <polyline id="chart-area" points="" fill="url(#chart-gradient)" stroke="none"/>
+                                <polyline id="chart-line" points="" fill="none" stroke="#275CCC" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                
+                                <!-- Data points (circles) -->
+                                <g id="chart-points"></g>
+
+                                <!-- X-axis labels -->
+                                <text x="50" y="155" font-size="10" fill="var(--muted-foreground)" text-anchor="start">12 AM</text>
+                                <text x="150" y="155" font-size="10" fill="var(--muted-foreground)" text-anchor="middle">4 AM</text>
+                                <text x="250" y="155" font-size="10" fill="var(--muted-foreground)" text-anchor="middle">8 AM</text>
+                                <text x="350" y="155" font-size="10" fill="var(--muted-foreground)" text-anchor="middle">12 PM</text>
+                                <text x="450" y="155" font-size="10" fill="var(--muted-foreground)" text-anchor="middle">4 PM</text>
+                                <text x="550" y="155" font-size="10" fill="var(--muted-foreground)" text-anchor="middle">8 PM</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Vital Signs -->
+                    <div class="grid-2">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon red">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                </div>
+                                <span class="stat-label">Heart Rate</span>
+                            </div>
+                            <p class="stat-value" id="heart-rate">118</p>
+                            <p class="stat-unit">BPM</p>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon orange">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v20M8 6a4 4 0 0 1 8 0v8a4 4 0 0 1-8 0"/>
+                                    </svg>
+                                </div>
+                                <span class="stat-label">Body Temp</span>
+                            </div>
+                            <p class="stat-value" id="temp-value">36.8</p>
+                            <p class="stat-unit">°C</p>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="summary-card">
+                        <h3 class="card-title">Today's Summary</h3>
+                        <div class="summary-grid">
+                            <div>
+                                <p class="summary-item-value" id="hydration-percent">67%</p>
+                                <p class="summary-item-label">Hydration</p>
+                            </div>
+                            <div>
+                                <p class="summary-item-value">8</p>
+                                <p class="summary-item-label">Drinks</p>
+                            </div>
+                            <div>
+                                <p class="summary-item-value">45</p>
+                                <p class="summary-item-label">Active min</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Devices -->
+                    <div class="devices-card">
+                        <h3 class="card-title">Connected Devices</h3>
+
+                        <div class="device-item">
+                            <div class="device-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="4" y="2" width="16" height="20" rx="2.18" ry="2.18"/>
+                                    <line x1="12" y1="17" x2="12" y2="17.01"/>
+                                </svg>
+                            </div>
+                            <div class="device-content">
+                                <p class="device-name">Smart Wristband</p>
+                                <p class="device-status">Last sync: Just now</p>
+                            </div>
+                            <div class="device-meta">
+                                <div class="device-battery">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="1" y="6" width="18" height="12" rx="2" ry="2"/>
+                                        <line x1="23" y1="13" x2="23" y2="11"/>
+                                    </svg>
+                                    <span>78%</span>
+                                </div>
+                                <div class="device-connected">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                                        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                                        <path d="M9 20h6"/>
+                                    </svg>
+                                    <span class="device-connected-text">Connected</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="device-item">
+                            <div class="device-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
+                                    <path d="M12 17c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+                                </svg>
+                            </div>
+                            <div class="device-content">
+                                <p class="device-name">HydroFlow Tumbler</p>
+                                <p class="device-status">Water level: 65%</p>
+                            </div>
+                            <div class="device-meta">
+                                <div class="device-battery">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="1" y="6" width="18" height="12" rx="2" ry="2"/>
+                                        <line x1="23" y1="13" x2="23" y2="11"/>
+                                    </svg>
+                                    <span>92%</span>
+                                </div>
+                                <div class="device-connected">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                                        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                                        <path d="M9 20h6"/>
+                                    </svg>
+                                    <span class="device-connected-text">Connected</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div id="activity-tab" class="tab-page">
+                <div class="activity-content">
+                    <h2 class="page-title">Activity Log</h2>
+                    <div class="placeholder-text">
+                        <p>Your activity log will appear here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile-tab" class="tab-page">
+                <div class="profile-content">
+                    <h2 class="page-title">Profile</h2>
+                    <div class="placeholder-text">
+                        <p>Your profile information will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav>
+            <div class="nav-container">
+                <button class="nav-btn active" onclick="switchTab('home')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    <span class="nav-btn-text">Home</span>
+                </button>
+
+                <button class="nav-btn" onclick="switchTab('activity')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    <span class="nav-btn-text">Activity</span>
+                </button>
+
+                <button class="nav-btn" onclick="switchTab('profile')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span class="nav-btn-text">Profile</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
+
+
+
