@@ -638,6 +638,38 @@ export default function Home() {
           margin-bottom: 24px;
         }
 
+        .combined-card {
+          border-radius: 24px;
+          background: linear-gradient(to bottom, #d4edfc, #a8d4f5);
+          padding: 24px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+          margin-bottom: 24px;
+          display: flex;
+          gap: 32px;
+        }
+
+        .combined-left {
+          flex: 0 0 200px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .combined-right {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        @media (max-width: 800px) {
+          .combined-card {
+            flex-direction: column;
+          }
+          .combined-left {
+            flex: none;
+          }
+        }
+
         .chart-header {
           display: flex;
           justify-content: space-between;
@@ -1308,109 +1340,113 @@ export default function Home() {
               </div>
             )}
 
-            <div className="water-card">
-              <div className="water-card-header">
-                <div className="water-card-left">
-                  <p className="water-card-label">Water Intake</p>
-                  <p className="water-card-value">{waterIntake}ml</p>
+            <div className="combined-card">
+              {/* Left Side: Water Intake */}
+              <div className="combined-left">
+                <div className="water-card-header" style={{marginBottom: '16px'}}>
+                  <div className="water-card-left">
+                    <p className="water-card-label">Water Intake</p>
+                    <p className="water-card-value">{waterIntake}ml</p>
+                  </div>
+                  <div className="water-card-right">
+                    <p className="water-card-goal-label">Goal</p>
+                    <p className="water-card-goal">{dailyGoal}ml</p>
+                  </div>
                 </div>
-                <div className="water-card-right">
-                  <p className="water-card-goal-label">Goal</p>
-                  <p className="water-card-goal">{dailyGoal}ml</p>
+
+                <div className="glass-container" style={{marginBottom: '16px'}}>
+                  <div className="glass-fill" style={{height: `${percentage}%`}}>
+                    <svg className="glass-wave" viewBox="0 0 100 15" preserveAspectRatio="none">
+                      <path d="M0,8 Q25,0 50,8 T100,8 L100,15 L0,15 Z" fill="#5ba8e6" style={{animation: 'wave 2s ease-in-out infinite'}}/>
+                    </svg>
+                    <div className="bubble bubble1"></div>
+                    <div className="bubble bubble2"></div>
+                    <div className="bubble bubble3"></div>
+                  </div>
+                  <div className="glass-percentage">{percentage}%</div>
+                </div>
+
+                <div className="button-group">
+                  <button className="btn btn-minus" onClick={() => addWater(-100)}>−</button>
+                  <button className="btn btn-add" onClick={() => addWater(250)}>+</button>
+                  <button className="btn btn-add100" onClick={() => addWater(100)}>+100</button>
                 </div>
               </div>
 
-              <div className="glass-container">
-                <div className="glass-fill" style={{height: `${percentage}%`}}>
-                  <svg className="glass-wave" viewBox="0 0 100 15" preserveAspectRatio="none">
-                    <path d="M0,8 Q25,0 50,8 T100,8 L100,15 L0,15 Z" fill="#5ba8e6" style={{animation: 'wave 2s ease-in-out infinite'}}/>
+              {/* Right Side: Flow Rate Monitor */}
+              <div className="combined-right">
+                <div className="chart-header">
+                  <div className="chart-info">
+                    <p className="chart-label">Flow Rate Monitor</p>
+                    <p className="chart-title">{sensorConnected ? 'Real-time Water Flow' : 'No Sensor Connected'}</p>
+                    <p className="chart-time">{sensorConnected ? `${flowData.length} readings today` : 'Connect a flow sensor to track'}</p>
+                  </div>
+                  <div className="chart-consumed">
+                    <p className="chart-consumed-label">{sensorConnected ? 'Total Tracked' : 'Current Flow'}</p>
+                    <p className="chart-consumed-value">{sensorConnected ? `${totalFlowIntake}ml` : '--'}</p>
+                    <p style={{fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '4px'}}>{sensorConnected ? `${flowPercentage}% of goal` : 'Awaiting sensor'}</p>
+                  </div>
+                </div>
+                
+                <div className="chart-container">
+                  <svg className="chart-svg" viewBox="0 0 600 150" preserveAspectRatio="none">
+                    <line x1="0" y1="30" x2="600" y2="30" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                    <line x1="0" y1="60" x2="600" y2="60" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                    <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                    <line x1="0" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                    
+                    <text x="5" y="20" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">100</text>
+                    <text x="5" y="50" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">75</text>
+                    <text x="5" y="80" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">50</text>
+                    <text x="5" y="110" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">25</text>
+                    <text x="5" y="135" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">ml/s</text>
+                    
+                    <line x1="40" y1="10" x2="40" y2="120" stroke="rgba(255,255,255,0.5)" strokeWidth="2"/>
+                    <line x1="40" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.5)" strokeWidth="2"/>
+                    
+                    <defs>
+                      <linearGradient id="chart-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style={{stopColor: '#5ba8e6', stopOpacity: 0.4}} />
+                        <stop offset="100%" style={{stopColor: '#275CCC', stopOpacity: 0.05}} />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Show empty state or chart data */}
+                    {!sensorConnected || flowData.length === 0 ? (
+                      <text x="300" y="70" fontSize="14" fill="var(--muted-foreground)" textAnchor="middle">
+                        {sensorConnected ? 'Waiting for flow data...' : 'Connect flow sensor to see data'}
+                      </text>
+                    ) : (
+                      <>
+                        <polygon points={areaPolygon} fill="url(#chart-gradient)"/>
+                        <polyline points={linePoints} fill="none" stroke="#275CCC" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                        {flowData.map((data, index) => {
+                          const xPosition = 40 + (data.time / 24) * 560;
+                          const yPosition = 10 + 110 - (data.flow / 100) * 110;
+                          return (
+                            <circle
+                              key={index}
+                              cx={xPosition}
+                              cy={yPosition}
+                              r="4"
+                              fill="#275CCC"
+                              stroke="white"
+                              strokeWidth="2"
+                            />
+                          );
+                        })}
+                      </>
+                    )}
+                    
+                    <text x="50" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="start">0h</text>
+                    <text x="150" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">4h</text>
+                    <text x="250" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">8h</text>
+                    <text x="350" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">12h</text>
+                    <text x="450" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">16h</text>
+                    <text x="550" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">20h</text>
                   </svg>
-                  <div className="bubble bubble1"></div>
-                  <div className="bubble bubble2"></div>
-                  <div className="bubble bubble3"></div>
                 </div>
-                <div className="glass-percentage">{percentage}%</div>
               </div>
-
-              <div className="button-group">
-                <button className="btn btn-minus" onClick={() => addWater(-100)}>−</button>
-                <button className="btn btn-add" onClick={() => addWater(250)}>+</button>
-                <button className="btn btn-add100" onClick={() => addWater(100)}>+100</button>
-              </div>
-            </div>
-
-<div className="chart-card">
-  <div className="chart-header">
-  <div className="chart-info">
-  <p className="chart-label">Flow Rate Monitor</p>
-  <p className="chart-title">{sensorConnected ? 'Real-time Water Flow' : 'No Sensor Connected'}</p>
-  <p className="chart-time">{sensorConnected ? `${flowData.length} readings today` : 'Connect a flow sensor to track'}</p>
-  </div>
-  <div className="chart-consumed">
-  <p className="chart-consumed-label">{sensorConnected ? 'Total Tracked' : 'Current Flow'}</p>
-  <p className="chart-consumed-value">{sensorConnected ? `${totalFlowIntake}ml` : '--'}</p>
-  <p style={{fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '4px'}}>{sensorConnected ? `${flowPercentage}% of goal` : 'Awaiting sensor'}</p>
-  </div>
-  </div>
-  
-  <div className="chart-container">
-  <svg className="chart-svg" viewBox="0 0 600 150" preserveAspectRatio="none">
-  <line x1="0" y1="30" x2="600" y2="30" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-  <line x1="0" y1="60" x2="600" y2="60" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-  <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-  <line x1="0" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-  
-  <text x="5" y="20" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">100</text>
-  <text x="5" y="50" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">75</text>
-  <text x="5" y="80" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">50</text>
-  <text x="5" y="110" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">25</text>
-  <text x="5" y="135" fontSize="10" fill="var(--muted-foreground)" dy="0.3em">ml/s</text>
-  
-  <line x1="40" y1="10" x2="40" y2="120" stroke="rgba(255,255,255,0.5)" strokeWidth="2"/>
-  <line x1="40" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.5)" strokeWidth="2"/>
-  
-  <defs>
-  <linearGradient id="chart-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-  <stop offset="0%" style={{stopColor: '#5ba8e6', stopOpacity: 0.4}} />
-  <stop offset="100%" style={{stopColor: '#275CCC', stopOpacity: 0.05}} />
-  </linearGradient>
-  </defs>
-  
-  {/* Show empty state or chart data */}
-  {!sensorConnected || flowData.length === 0 ? (
-    <text x="300" y="70" fontSize="14" fill="var(--muted-foreground)" textAnchor="middle">
-      {sensorConnected ? 'Waiting for flow data...' : 'Connect flow sensor to see data'}
-    </text>
-  ) : (
-    <>
-      <polygon points={areaPolygon} fill="url(#chart-gradient)"/>
-      <polyline points={linePoints} fill="none" stroke="#275CCC" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-      {flowData.map((data, index) => {
-        const xPosition = 40 + (data.time / 24) * 560;
-        const yPosition = 10 + 110 - (data.flow / 100) * 110;
-        return (
-          <circle
-            key={index}
-            cx={xPosition}
-            cy={yPosition}
-            r="4"
-            fill="#275CCC"
-            stroke="white"
-            strokeWidth="2"
-          />
-        );
-      })}
-    </>
-  )}
-  
-  <text x="50" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="start">0h</text>
-  <text x="150" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">4h</text>
-  <text x="250" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">8h</text>
-  <text x="350" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">12h</text>
-  <text x="450" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">16h</text>
-  <text x="550" y="140" fontSize="10" fill="var(--muted-foreground)" textAnchor="middle">20h</text>
-  </svg>
-  </div>
             </div>
 
             <div className="grid-2">
