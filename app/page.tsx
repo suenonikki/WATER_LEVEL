@@ -322,8 +322,7 @@ export default function Home() {
         }
 
         .content {
-          padding: 32px 48px;
-          max-width: 100%;
+          padding: 32px 24px;
         }
 
         .top-nav {
@@ -729,11 +728,12 @@ export default function Home() {
         .chart-container {
           position: relative;
           width: 100%;
-          height: 280px;
+          max-width: 600px;
+          height: 200px;
           margin-bottom: 0;
           background-color: rgba(255, 255, 255, 0.5);
           border-radius: 20px;
-          padding: 20px 20px 40px 20px;
+          padding: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1390,7 +1390,7 @@ export default function Home() {
                 </div>
                 
                 <div className="chart-container">
-                  <svg className="chart-svg" viewBox="0 0 600 150" preserveAspectRatio="none">
+                  <svg className="chart-svg" viewBox="0 0 600 150" preserveAspectRatio="xMidYMid meet">
                     <line x1="0" y1="30" x2="600" y2="30" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
                     <line x1="0" y1="60" x2="600" y2="60" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
                     <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
