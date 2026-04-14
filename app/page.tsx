@@ -322,7 +322,8 @@ export default function Home() {
         }
 
         .content {
-          padding: 32px 24px;
+          padding: 32px 48px;
+          max-width: 100%;
         }
 
         .top-nav {
@@ -534,15 +535,14 @@ export default function Home() {
 
         .glass-container {
           position: relative;
-          width: 160px;
-          height: 180px;
-          margin: 0 auto;
+          width: 128px;
+          height: 208px;
+          margin: 0 auto 24px;
           border-radius: 16px;
           border: 4px solid rgba(255, 255, 255, 0.7);
           background-color: rgba(255, 255, 255, 0.3);
           box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.1);
           overflow: hidden;
-          flex: 1;
         }
 
         .glass-fill {
@@ -642,19 +642,17 @@ export default function Home() {
         .combined-card {
           border-radius: 24px;
           background: linear-gradient(to bottom, #d4edfc, #a8d4f5);
-          padding: 32px;
+          padding: 24px;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
           margin-bottom: 24px;
           display: flex;
-          gap: 48px;
-          min-height: 320px;
+          gap: 32px;
         }
 
         .combined-left {
-          flex: 0 0 240px;
+          flex: 0 0 200px;
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
         }
 
         .combined-right {
@@ -662,15 +660,6 @@ export default function Home() {
           min-width: 0;
           display: flex;
           flex-direction: column;
-        }
-        
-        .combined-right .chart-container {
-          flex: 1;
-          min-height: 180px;
-        }
-        
-        .combined-right .chart-svg {
-          height: 100%;
         }
 
         @media (max-width: 800px) {
